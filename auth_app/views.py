@@ -1,4 +1,4 @@
-#  auth_app/views.py
+# auth_app/views.py
 
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
@@ -29,7 +29,9 @@ def register(request):
             status=status.HTTP_400_BAD_REQUEST
         )
     
-    user = User.objects.create(email=email, password=password)
+    user = User(email=email)
+    user.set_password(password)
+    user.save()
     serializer = UserSerializer(user)
     return Response(serializer.data, status=status.HTTP_201_CREATED)
 
@@ -45,12 +47,18 @@ def login(request):
         )
     
     try:
-        user = User.objects.get(email=email, password=password)
-        serializer = UserSerializer(user)
-        return Response({
-            'success': True,
-            'user': serializer.data
-        })
+        user = User.objects.get(email=email)
+        if user.check_password(password):
+            serializer = UserSerializer(user)
+            return Response({
+                'success': True,
+                'user': serializer.data
+            })
+        else:
+            return Response(
+                {'error': 'Invalid credentials'},
+                status=status.HTTP_401_UNAUTHORIZED
+            )
     except User.DoesNotExist:
         return Response(
             {'error': 'Invalid credentials'},
@@ -62,3 +70,15 @@ def get_users(request):
     users = User.objects.all()
     serializer = UserSerializer(users, many=True)
     return Response(serializer.data)
+
+@api_view(['DELETE'])
+def delete_user(request, user_id):
+    try:
+        user = User.objects.get(id=user_id)
+        user.delete()
+        return Response({'success': True, 'message': 'User deleted'})
+    except User.DoesNotExist:
+        return Response(
+            {'error': 'User not found'},
+            status=status.HTTP_404_NOT_FOUND
+        )
