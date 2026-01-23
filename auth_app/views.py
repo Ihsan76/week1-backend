@@ -1,10 +1,13 @@
 # auth_app/views.py
-
-from rest_framework.decorators import api_view
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework import status
-from .models import User
-from .serializers import UserSerializer
+
+from .models import User, Course
+from .serializers import UserSerializer, CourseSerializer
+
+# ... register, login, get_users, delete_user كما هي ...
 
 @api_view(['POST'])
 def register(request):
@@ -82,3 +85,56 @@ def delete_user(request, user_id):
             {'error': 'User not found'},
             status=status.HTTP_404_NOT_FOUND
         )
+
+# ... register, login, get_users, delete_user كما هي ...
+
+@api_view(['GET', 'POST'])
+@permission_classes([AllowAny])  # لاحقاً يمكن تقييدها بالمصادقة
+def courses_list_create(request):
+    """
+    GET: إرجاع قائمة بجميع الدورات.
+    POST: إنشاء دورة جديدة.
+    في هذه المرحلة نسمح لأي شخص بالوصول (AllowAny),
+    لاحقاً يمكن ربطها بالمستخدم المسجل فقط.
+    """
+    if request.method == 'GET':
+        courses = Course.objects.all()
+        serializer = CourseSerializer(courses, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    if request.method == 'POST':
+        # مؤقتاً، نربط صاحب الدورة بأول مستخدم في النظام أو مستخدم ثابت
+        # لاحقاً: نستخدم المستخدم الحالي من الـ auth (JWT / Session)
+        owner = User.objects.first()
+        if owner is None:
+            return Response(
+                {'error': 'No owner user found to attach to the course.'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        serializer = CourseSerializer(data=request.data)
+        if serializer.is_valid():
+            course = serializer.save(owner=owner)
+            return Response(
+                CourseSerializer(course).data,
+                status=status.HTTP_201_CREATED
+            )
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+@api_view(['DELETE'])
+@permission_classes([AllowAny])
+def course_delete(request, course_id: int):
+    """
+    DELETE: حذف دورة حسب الـ id.
+    في المستقبل يمكن التأكد أن الطالب/المدرس صاحب الحق هو من يحذف.
+    """
+    try:
+        course = Course.objects.get(id=course_id)
+    except Course.DoesNotExist:
+        return Response(
+            {'error': 'Course not found'},
+            status=status.HTTP_404_NOT_FOUND
+        )
+
+    course.delete()
+    return Response({'success': True, 'message': 'Course deleted'})
