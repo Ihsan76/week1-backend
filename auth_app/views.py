@@ -5,11 +5,9 @@ from rest_framework.response import Response
 from rest_framework import status
 
 from .models import User, Course
-from .serializers import UserSerializer, CourseSerializer
+from .serializers import UserSerializer, UserPublicSerializer, CourseSerializer
 
-# ... register, login, get_users, delete_user كما هي ...
 
-@api_view(['POST'])
 @api_view(['POST'])
 def register(request):
     email = request.data.get('email')
@@ -41,38 +39,44 @@ def register(request):
     user.set_password(password)
     user.save()
 
-    serializer = UserSerializer(user)
-    return Response(serializer.data, status=status.HTTP_201_CREATED) 
-    
+    data = UserPublicSerializer(user).data
+    return Response(data, status=status.HTTP_201_CREATED)
+
+
 @api_view(['POST'])
 def login(request):
     email = request.data.get('email')
     password = request.data.get('password')
-    
+
     if not email or not password:
         return Response(
             {'error': 'Email and password are required'},
             status=status.HTTP_400_BAD_REQUEST
         )
-    
+
     try:
         user = User.objects.get(email=email)
-        if user.check_password(password):
-            serializer = UserSerializer(user)
-            return Response({
-                'success': True,
-                'user': serializer.data
-            })
-        else:
-            return Response(
-                {'error': 'Invalid credentials'},
-                status=status.HTTP_401_UNAUTHORIZED
-            )
     except User.DoesNotExist:
         return Response(
             {'error': 'Invalid credentials'},
             status=status.HTTP_401_UNAUTHORIZED
         )
+
+    if not user.check_password(password):
+        return Response(
+            {'error': 'Invalid credentials'},
+            status=status.HTTP_401_UNAUTHORIZED
+        )
+
+    public_data = UserPublicSerializer(user).data
+    return Response(
+        {
+            'success': True,
+            'user': public_data,
+        },
+        status=status.HTTP_200_OK,
+    )
+
 
 @api_view(['GET'])
 def get_users(request):
@@ -80,19 +84,20 @@ def get_users(request):
     serializer = UserSerializer(users, many=True)
     return Response(serializer.data)
 
+
 @api_view(['DELETE'])
 def delete_user(request, user_id):
     try:
         user = User.objects.get(id=user_id)
-        user.delete()
-        return Response({'success': True, 'message': 'User deleted'})
     except User.DoesNotExist:
         return Response(
             {'error': 'User not found'},
             status=status.HTTP_404_NOT_FOUND
         )
 
-# ... register, login, get_users, delete_user كما هي ...
+    user.delete()
+    return Response({'success': True, 'message': 'User deleted'})
+
 
 @api_view(['GET', 'POST'])
 @permission_classes([AllowAny])  # لاحقاً يمكن تقييدها بالمصادقة
@@ -125,7 +130,9 @@ def courses_list_create(request):
                 CourseSerializer(course).data,
                 status=status.HTTP_201_CREATED
             )
+
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
 
 @api_view(['DELETE'])
 @permission_classes([AllowAny])
