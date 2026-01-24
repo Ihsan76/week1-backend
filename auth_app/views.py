@@ -104,6 +104,40 @@ def delete_user(request, user_id):
 
     return Response({'success': True, 'message': 'User marked as deleted'})
 
+# auth_app/views.py
+from rest_framework.decorators import api_view
+from rest_framework import status
+from django.utils import timezone
+
+from .models import User
+from .serializers import UserSerializer, UserPublicSerializer
+
+
+@api_view(['PATCH'])
+def update_user(request, user_id: int):
+    """
+    تحديث جزئي لبيانات المستخدم (full_name, role, language, timezone, is_active).
+    لا نسمح بتعديل email أو password من هنا.
+    """
+    try:
+        user = User.objects.get(id=user_id, is_deleted=False)
+    except User.DoesNotExist:
+        return Response(
+            {'error': 'User not found'},
+            status=status.HTTP_404_NOT_FOUND,
+        )
+
+    # نحدّد الحقول المسموح تعديلها
+    allowed_fields = {'full_name', 'role', 'language', 'timezone', 'is_active'}
+    data = {k: v for k, v in request.data.items() if k in allowed_fields}
+
+    serializer = UserSerializer(user, data=data, partial=True)
+    if serializer.is_valid():
+        serializer.save(updated_at=timezone.now())
+        public_data = UserPublicSerializer(serializer.instance).data
+        return Response(public_data, status=status.HTTP_200_OK)
+
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 @api_view(['GET', 'POST'])
