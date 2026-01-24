@@ -54,12 +54,25 @@ TEMPLATES = [
 WSGI_APPLICATION = 'config.wsgi.application'
 
 # ================== DATABASE: Postgres via DATABASE_URL ==================
-DATABASES = {
-    'default': dj_database_url.config(
-        default=os.environ.get('DATABASE_URL'),
-        conn_max_age=600,
-    )
-}
+# ...
+
+if os.environ.get("DATABASE_URL"):
+    # في السيرفر (Render) أو إذا عرّفت DATABASE_URL
+    DATABASES = {
+        "default": dj_database_url.config(
+            default=os.environ["DATABASE_URL"],
+            conn_max_age=600,
+        )
+    }
+else:
+    # في اللوكل: استخدم SQLite
+    DATABASES = {
+        "default": {
+            "ENGINE": "django.db.backends.sqlite3",
+            "NAME": BASE_DIR / "db.sqlite3",
+        }
+    }
+
 # ========================================================================
 
 AUTH_PASSWORD_VALIDATORS = [
