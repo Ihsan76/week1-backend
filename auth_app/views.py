@@ -10,34 +10,40 @@ from .serializers import UserSerializer, CourseSerializer
 # ... register, login, get_users, delete_user كما هي ...
 
 @api_view(['POST'])
+@api_view(['POST'])
 def register(request):
     email = request.data.get('email')
     password = request.data.get('password')
-    
+    full_name = request.data.get('full_name', '')
+
     if not email or not password:
         return Response(
             {'error': 'Email and password are required'},
             status=status.HTTP_400_BAD_REQUEST
         )
-    
+
     if len(password) < 6:
         return Response(
             {'error': 'Password must be at least 6 characters'},
             status=status.HTTP_400_BAD_REQUEST
         )
-    
+
     if User.objects.filter(email=email).exists():
         return Response(
             {'error': 'User already exists'},
             status=status.HTTP_400_BAD_REQUEST
         )
-    
-    user = User(email=email)
+
+    user = User(
+        email=email,
+        full_name=full_name,
+    )
     user.set_password(password)
     user.save()
-    serializer = UserSerializer(user)
-    return Response(serializer.data, status=status.HTTP_201_CREATED)
 
+    serializer = UserSerializer(user)
+    return Response(serializer.data, status=status.HTTP_201_CREATED) 
+    
 @api_view(['POST'])
 def login(request):
     email = request.data.get('email')
