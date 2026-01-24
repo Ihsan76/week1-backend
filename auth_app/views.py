@@ -80,10 +80,12 @@ def login(request):
 
 @api_view(['GET'])
 def get_users(request):
-    users = User.objects.all()
+    users = User.objects.filter(is_deleted=False)
     serializer = UserSerializer(users, many=True)
     return Response(serializer.data)
 
+
+from django.utils import timezone
 
 @api_view(['DELETE'])
 def delete_user(request, user_id):
@@ -95,8 +97,13 @@ def delete_user(request, user_id):
             status=status.HTTP_404_NOT_FOUND
         )
 
-    user.delete()
-    return Response({'success': True, 'message': 'User deleted'})
+    user.is_deleted = True
+    user.deleted_at = timezone.now()
+    # لاحقاً: اربط deleted_by بالمستخدم الحالي بعد إضافة نظام Auth/JWT
+    user.save()
+
+    return Response({'success': True, 'message': 'User marked as deleted'})
+
 
 
 @api_view(['GET', 'POST'])
