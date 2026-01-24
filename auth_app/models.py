@@ -30,7 +30,15 @@ class User(models.Model):
     # التتبع الزمني
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
-
+    is_deleted = models.BooleanField(default=False)
+    deleted_at = models.DateTimeField(null=True, blank=True)
+    deleted_by = models.ForeignKey(
+        'self',
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name='deleted_users',
+    )
     # دوال الباسورد
     def set_password(self, raw_password: str) -> None:
         self.password = make_password(raw_password)
