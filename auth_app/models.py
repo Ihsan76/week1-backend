@@ -3,19 +3,44 @@ from django.db import models
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager
 from django.contrib.auth.hashers import make_password, check_password
 
+
 class User(models.Model):
+    ROLE_CHOICES = [
+        ("student", "Student"),
+        ("instructor", "Instructor"),
+        ("admin", "Admin"),
+    ]
+
     email = models.EmailField(unique=True)
     password = models.CharField(max_length=255)
-    created_at = models.DateTimeField(auto_now_add=True)
 
-    def set_password(self, raw_password):
+    # بيانات أساسية
+    full_name = models.CharField(max_length=150, blank=True)
+    role = models.CharField(
+        max_length=20,
+        choices=ROLE_CHOICES,
+        default="student",
+    )
+    is_active = models.BooleanField(default=True)
+
+    # إعدادات الحساب
+    language = models.CharField(max_length=5, default="ar")  # ar / en
+    timezone = models.CharField(max_length=50, default="Asia/Amman")
+
+    # التتبع الزمني
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    # دوال الباسورد
+    def set_password(self, raw_password: str) -> None:
         self.password = make_password(raw_password)
 
-    def check_password(self, raw_password):
+    def check_password(self, raw_password: str) -> bool:
         return check_password(raw_password, self.password)
 
-    def __str__(self):
+    def __str__(self) -> str:
         return self.email
+
 # ... هنا كود User الحالي عندك ...
 
 class Course(models.Model):
