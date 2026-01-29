@@ -82,8 +82,8 @@ AUTH_PASSWORD_VALIDATORS = [
     {'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator'},
 ]
 
-LANGUAGE_CODE = 'en-us'
-TIME_ZONE = 'UTC'
+LANGUAGE_CODE = 'ar'
+TIME_ZONE = 'Asia/Amman'
 USE_I18N = True
 USE_TZ = True
 
@@ -94,3 +94,5 @@ CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",
     "https://week1-learning.vercel.app",
 ]
+
+AUTH_USER_MODEL = "auth_app.User"
