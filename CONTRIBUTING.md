@@ -1,6 +1,4 @@
-## 2) CONTRIBUTING.md (Backend) — `week1-backend/CONTRIBUTING.md`
 
-```md
 # المساهمة في آفاق (Backend)
 
 شكرًا لمساهمتك في Backend منصة آفاق التعليمية.
@@ -18,6 +16,7 @@ source .venv/bin/activate  # macOS/Linux
 pip install -r requirements.txt
 python manage.py migrate
 python manage.py runserver
+```
 أسلوب العمل
 افتح Issue قبل أي تغيير كبير.
 
