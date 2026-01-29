@@ -13,7 +13,7 @@
 
 ## التشغيل محليًا
 ### 1) إنشاء بيئة افتراضية
-```bash
+bash
 python -m venv .venv
 # Windows: .venv\Scripts\activate
 # macOS/Linux:
