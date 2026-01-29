@@ -13,19 +13,22 @@
 
 ## التشغيل محليًا
 ### 1) إنشاء بيئة افتراضية
-bash
+```bash
 python -m venv .venv
 # Windows: .venv\Scripts\activate
 # macOS/Linux:
 source .venv/bin/activate
+```
 2) تثبيت المتطلبات
-bash
+```bash
 pip install -r requirements.txt
+```
 3) الترحيلات والتشغيل
-bash
+```bash
 python manage.py migrate
 python manage.py runserver
 http://127.0.0.1:8000
+```
 
 إعدادات الإنتاج (مهم)
 قبل إطلاق المنصة للمستخدمين الفعليين:
