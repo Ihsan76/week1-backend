@@ -12,7 +12,8 @@ from .serializers import UserSerializer, UserPublicSerializer, CourseSerializer
 def register(request):
     email = request.data.get('email')
     password = request.data.get('password')
-    full_name = request.data.get('full_name', '')
+    full_name = request.data.get("full_name") or request.data.get("fullname", "")
+
 
     if not email or not password:
         return Response(
@@ -28,7 +29,7 @@ def register(request):
 
     if User.objects.filter(email=email).exists():
         return Response(
-            {'error': 'User already exists'},
+            {'error': 'EMAIL_EXISTS'},
             status=status.HTTP_400_BAD_REQUEST
         )
 
